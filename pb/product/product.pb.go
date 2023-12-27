@@ -7,7 +7,7 @@
 package product
 
 import (
-	pagination "pb/pagination"
+	pagination "go-grpc-unary/pb/pagination"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
