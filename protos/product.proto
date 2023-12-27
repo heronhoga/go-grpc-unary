@@ -3,7 +3,7 @@ package go_grpc_unary;
 
 import "pagination.proto";
 
-option go_package = "go-grpc-unary/pb/product";
+option go_package = "/pb/product";
 
 
 service ProductService {
