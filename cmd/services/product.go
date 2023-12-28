@@ -43,7 +43,7 @@ func (p *ProductService) GetProducts(context.Context, *productPb.Empty) (*produc
 	pagination.Total = uint32(total)
 	pagination.PerPage = uint32(limit)
 	pagination.CurrentPage = uint32(page)
-	pagination.LastPage = uint32(math.Ceil(float64(total))/ float64(limit))
+	pagination.LastPage = uint32(math.Ceil(float64(total)/ float64(limit)))
 
 	rows, err := sql.Offset(int(offset)).Limit(int(limit)).Rows()
 
