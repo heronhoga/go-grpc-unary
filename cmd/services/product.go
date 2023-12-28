@@ -2,9 +2,10 @@ package services
 
 import (
 	"context"
-	"go-grpc-unary/pb/pagination"
+	pagingPb "go-grpc-unary/pb/pagination"
 	productPb "go-grpc-unary/pb/product"
 	"log"
+	"math"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,11 +17,36 @@ type ProductService struct {
 }
 
 func (p *ProductService) GetProducts(context.Context, *productPb.Empty) (*productPb.Products, error) {
+	
+	//DYNAMIC PAGINATION FUNCTION
+	var page int64 = 1
+	var total int64
+	var limit int64 = 1
+	var offset int64
+
+	var pagination pagingPb.Pagination
+
+
 	var products []*productPb.Product
 
-	rows, err := p.DB.Table("products as p").
+	sql := p.DB.Table("products as p").
 	Joins("INNER JOIN categories AS c on c.id = p.category_id").
-	Select("p.id", "p.name", "p.price", "p.stock", "c.id", "c.name").Rows()
+	Select("p.id", "p.name", "p.price", "p.stock", "c.id", "c.name")
+
+	sql.Count(&total)
+	if page == 1 {
+		offset = 0
+	} else {
+		offset = (page - 1) * limit
+	}
+
+	pagination.Total = uint32(total)
+	pagination.PerPage = uint32(limit)
+	pagination.CurrentPage = uint32(page)
+	pagination.LastPage = uint32(math.Ceil(float64(total))/ float64(limit))
+
+	rows, err := sql.Offset(int(offset)).Limit(int(limit)).Rows()
+
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -41,12 +67,7 @@ func (p *ProductService) GetProducts(context.Context, *productPb.Empty) (*produc
 	}
 
 	response := &productPb.Products{
-		Pagination: &pagination.Pagination{
-			Total: 2,
-			PerPage: 2,
-			CurrentPage: 1,
-			LastPage: 2,
-		},
+		Pagination: &pagination,
 		Data: products,
 	}
 
