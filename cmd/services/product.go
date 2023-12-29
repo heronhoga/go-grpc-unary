@@ -16,11 +16,12 @@ type ProductService struct {
 	DB *gorm.DB
 }
 
-func (p *ProductService) GetProducts(context.Context, *productPb.Empty) (*productPb.Products, error) {
-	
+func (p *ProductService) GetProducts(ctx context.Context,pageParam *productPb.Page) (*productPb.Products, error) {
 	//DYNAMIC PAGINATION FUNCTION
 	var page int64 = 1
-
+	if pageParam.GetPage() != 0 {
+		page = pageParam.GetPage()
+	}
 
 	var pagination pagingPb.Pagination
 
