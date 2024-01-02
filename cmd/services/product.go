@@ -82,3 +82,47 @@ func (p *ProductService) GetProduct(ctx context.Context, id *productPb.Id) (*pro
 	
 	return &product, nil
 }
+
+func(p *ProductService) CreateProduct(ctx context.Context, productData *productPb.Product) (*productPb.Id, error) {
+	var Response productPb.Id
+
+	err := p.DB.Transaction(func(tx *gorm.DB) error {
+		category := productPb.Category{
+			Id: 0,
+			Name: productData.GetCategory().GetName(),
+		}
+
+		if err := tx.Table("categories").
+		Where("LCASE(name) = ?", category.GetName()).
+		FirstOrCreate(&category).Error; err != nil {
+			return err
+		}
+
+		product := struct {
+			Id uint64
+			Name string
+			Price uint64
+			Stock uint64
+			Category_id uint64
+		} {
+			Id: productData.GetId(),
+			Name: productData.GetName(),
+			Price: productData.GetPrice(),
+			Stock: productData.GetStock(),
+			Category_id: category.GetId(),
+		}
+
+		if err := tx.Table("products").Create(&product).Error; err != nil {
+			return err
+		}
+
+		Response.Id = product.Id
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &Response, nil
+}
